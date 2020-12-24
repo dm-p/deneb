@@ -1,0 +1,20 @@
+{
+    "visual": {
+        "name": "deneb",
+        "displayName": "Deneb",
+        "guid": "deneb7E15AEF80B9E4D4F8E12924291ECE89A",
+        "visualClassName": "Visual",
+        "version": "0.1.0.60",
+        "description": "Declarative visualization in Power BI, using the Vega language.",
+        "supportUrl": "ds",
+        "gitHubUrl": ""
+    },
+    "apiVersion": "3.4.0",
+    "author": { "name": "Daniel Marsh-Patrick", "email": "daniel@coacervo.co" },
+    "assets": { "icon": "assets/icon.png" },
+    "externalJS": null,
+    "style": "style/visual.less",
+    "capabilities": "capabilities.json",
+    "dependencies": null,
+    "stringResources": []
+}
