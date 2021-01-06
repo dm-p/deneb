@@ -24,52 +24,63 @@
  *  THE SOFTWARE.
  */
 
-import { VisualState } from '..';
-import { Debugger } from '../../Debugger';
+import { VisualState } from '.';
+import { Debugger, standardLog } from '../Debugger';
+
+const owner = 'VisualRenderingService';
 
 export class VisualRenderingService {
     private shouldVisualRender: boolean = true;
     private referenceState: VisualState = VisualState.Initial;
 
     constructor() {
-        Debugger.LOG('Instantiated [VisualRenderingService]');
+        Debugger.LOG(`Instantiating [${owner}]`);
     }
 
+    @standardLog()
     registerStateChangeEvent(state: VisualState) {
-        Debugger.LOG('VisualRenderingService.registerStateChangeEvent()');
+        Debugger.LOG('Registering state change...');
         Debugger.LOG(`State: ${state}`);
         if (this.referenceState !== state) {
+            Debugger.LOG('Need to register volatile event.');
             this.registerVolatileEvent();
         }
         this.referenceState = state;
     }
 
+    @standardLog()
     private registerVolatileEvent() {
-        Debugger.LOG('VisualRenderingService.registerStateChangeEvent()');
+        Debugger.LOG('Registering volatile event for visual render...');
         this.shouldVisualRender = true;
     }
 
+    @standardLog()
     registerSegmentLoadEvent() {
-        Debugger.LOG('VisualRenderingService.registerSegmentLoadEvent()');
+        Debugger.LOG('Registering data segment load event...');
         this.registerVolatileEvent();
     }
 
+    @standardLog()
     registerResizeEvent() {
-        Debugger.LOG('VisualRenderingService.registerResizeEvent()');
+        Debugger.LOG('Registering resize event...');
         this.registerVolatileEvent();
     }
 
+    @standardLog()
     registerPersistEvent() {
-        Debugger.LOG('VisualRenderingService.registerPersistEvent()');
+        Debugger.LOG('Registering object persistence event...');
         this.registerVolatileEvent();
     }
 
+    @standardLog()
     requestRender() {
-        Debugger.LOG('VisualRenderingService.requestRender()');
+        Debugger.LOG('Requesting re-render status...');
         if (this.shouldVisualRender) {
+            Debugger.LOG('Visual should re-render');
             this.shouldVisualRender = false;
             return true;
         }
+        Debugger.LOG('Visual does not need to re-render');
         return false;
     }
 }

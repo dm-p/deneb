@@ -47,7 +47,7 @@ export class EditorPane extends React.Component<
     constructor(props: EditorPaneProps) {
         super(props);
         const width = this.getDefaultPaneWidthInPx();
-        this.props.visualApi.editorPaneWidth = width;
+        this.props.visualServices.editorPaneWidth = width;
         this.state = {
             width: width,
             expandedWidth: width,
@@ -65,7 +65,7 @@ export class EditorPane extends React.Component<
 
     render() {
         Debugger.LOG('Rendering Component: [VisualEditorPane]...');
-        const { visualApi } = this.props,
+        const { visualServices } = this.props,
             { isExpanded } = this.state;
         return (
             <div id='visualEditor'>
@@ -80,7 +80,7 @@ export class EditorPane extends React.Component<
                 >
                     <section>{this.resolvePaneContent()}</section>
                     <div id='editorPreview'>
-                        {<VisualRender visualApi={visualApi} />}
+                        {<VisualRender visualServices={visualServices} />}
                     </div>
                 </SplitPane>
             </div>
@@ -89,8 +89,8 @@ export class EditorPane extends React.Component<
 
     private resolveDirtyFlag() {
         Debugger.LOG('EditorPane.resolveDirtyFlag()');
-        const { visualApi } = this.props,
-            { editor, settings } = visualApi;
+        const { visualServices } = this.props,
+            { editor, settings } = visualServices;
         editor.resolveDirtyStatus(settings.vega.jsonSpec);
         Debugger.LOG(`Dirty = ${editor.isDirty}`);
         this.setState({
@@ -99,8 +99,8 @@ export class EditorPane extends React.Component<
     }
 
     private resolvePaneContent() {
-        const { visualApi } = this.props,
-            { localisationManager } = visualApi,
+        const { visualServices } = this.props,
+            { localisationManager } = visualServices,
             { isExpanded } = this.state;
         switch (isExpanded) {
             case true: {
@@ -133,12 +133,12 @@ export class EditorPane extends React.Component<
                                     </div>
                                 </header>
                                 <Editor
-                                    visualApi={visualApi}
+                                    visualServices={visualServices}
                                     resolveDirtyFlag={this.resolveDirtyFlag}
                                 />
                                 <footer>
                                     <SpecPersistenceCommands
-                                        visualApi={visualApi}
+                                        visualServices={visualServices}
                                     />
                                 </footer>
                             </section>
@@ -183,7 +183,7 @@ export class EditorPane extends React.Component<
 
     private getDefaultPaneWidthInPx() {
         return (
-            this.props.visualApi.viewport.width *
+            this.props.visualServices.viewport.width *
             VisualConfiguration.splitPane.defaultSizePercent
         );
     }
@@ -204,7 +204,7 @@ export class EditorPane extends React.Component<
     }
 
     private resolveMaxSize(isExpanded: boolean) {
-        const { width } = this.props.visualApi.viewport,
+        const { width } = this.props.visualServices.viewport,
             { maxSizePercent, collapsedSize } = VisualConfiguration.splitPane;
         return (isExpanded && width * maxSizePercent) || collapsedSize;
     }
@@ -220,24 +220,24 @@ export class EditorPane extends React.Component<
 
     componentWillUnmount() {
         Debugger.LOG(`Editor unmounted. Updating pane size in API...`);
-        this.props.visualApi.editorPaneWidth = 0;
+        this.props.visualServices.editorPaneWidth = 0;
     }
 
     private handlePaneToggle() {
         Debugger.LOG('EditorPane.handlePaneToggle()');
         Debugger.LOG(`Pane show/hide toggle clicked! Updating state...`);
         const { isExpanded } = this.state,
-            { visualApi } = this.props,
+            { visualServices } = this.props,
             newExpanded = !isExpanded,
             width = this.resolveDefaultSize(newExpanded);
-        visualApi.editorPaneWidth = width;
-        visualApi.rendering.registerResizeEvent();
+        visualServices.editorPaneWidth = width;
+        visualServices.rendering.registerResizeEvent();
         this.setState(
             {
                 isExpanded: newExpanded,
                 width: width
             },
-            () => visualApi.editor.resize()
+            () => visualServices.editor.resize()
         );
     }
 
@@ -250,16 +250,16 @@ export class EditorPane extends React.Component<
     private setPaneWidth(width: number) {
         Debugger.LOG('EditorPane.setPaneWidth()');
         Debugger.LOG(`Setting pane width to ${width}px...`);
-        const { visualApi } = this.props;
-        visualApi.editorPaneWidth = width;
-        visualApi.rendering.registerResizeEvent();
+        const { visualServices } = this.props;
+        visualServices.editorPaneWidth = width;
+        visualServices.rendering.registerResizeEvent();
         this.setState(
             {
                 width: width,
                 expandedWidth: width
             },
             () => {
-                visualApi.editor.resize();
+                visualServices.editor.resize();
             }
         );
     }

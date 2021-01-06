@@ -31,8 +31,8 @@ import { DataFetchingProps } from '..';
 export class DataFetching extends React.Component<DataFetchingProps, {}> {
     render() {
         Debugger.LOG('Rendering Component: [SpecificationError]...');
-        const { visualApi } = this.props,
-            { rowsLoaded } = visualApi.dataLimit;
+        const { visualServices } = this.props,
+            { rowsLoaded } = visualServices.dataLimit;
 
         return (
             <>
@@ -41,7 +41,7 @@ export class DataFetching extends React.Component<DataFetchingProps, {}> {
                         <div className='w3-cell-row top'>
                             <div className='w3-cell'>
                                 <h3>
-                                    {visualApi.localisationManager.getDisplayName(
+                                    {visualServices.localisationManager.getDisplayName(
                                         'Fetching_Data'
                                     )}
                                 </h3>
@@ -51,7 +51,7 @@ export class DataFetching extends React.Component<DataFetchingProps, {}> {
                         <div className='w3-cell-row section'>
                             <div className='text-muted assistive'>
                                 <b>{rowsLoaded}</b>{' '}
-                                {visualApi.localisationManager.getDisplayName(
+                                {visualServices.localisationManager.getDisplayName(
                                     'Fetching_Data_Progress_Suffix'
                                 )}
                             </div>
@@ -64,8 +64,8 @@ export class DataFetching extends React.Component<DataFetchingProps, {}> {
     }
 
     private resolveCustomVisualNotes() {
-        const { visualApi } = this.props,
-            { dataLimit } = visualApi.settings;
+        const { visualServices } = this.props,
+            { dataLimit } = visualServices.settings;
         return (
             (dataLimit.enabled &&
                 dataLimit.override &&
@@ -77,7 +77,7 @@ export class DataFetching extends React.Component<DataFetchingProps, {}> {
                                 You're seeing this section because you've
                                 enabled the{' '}
                                 <b>
-                                    {visualApi.localisationManager.getDisplayName(
+                                    {visualServices.localisationManager.getDisplayName(
                                         'Objects_DataLimit_Override'
                                     )}
                                 </b>{' '}
@@ -90,7 +90,7 @@ export class DataFetching extends React.Component<DataFetchingProps, {}> {
                                 You can prevent this message being displayed for
                                 your end-users by turning off the{' '}
                                 <b>
-                                    {visualApi.localisationManager.getDisplayName(
+                                    {visualServices.localisationManager.getDisplayName(
                                         'Objects_DataLimit_ShowCustomVisualNotes'
                                     )}
                                 </b>{' '}

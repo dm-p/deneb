@@ -31,13 +31,15 @@ import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
 import DataViewTable = powerbi.DataViewTable;
 
 // Internal dependencies
-import { Debugger } from '../../Debugger';
+import { Debugger, standardLog } from '../Debugger';
 import {
     IVisualDataset,
     IVisualValueMetadata,
     IVisualValueRow,
     SupportedDataViewMapping
-} from '..';
+} from '.';
+
+const owner = 'DataViewService';
 
 /**
  * Used to handle Power BI dataView operations within the visual
@@ -49,10 +51,11 @@ export class DataViewService {
     private hasValidDataRoles: boolean = false;
 
     constructor(dataViewMappingType: SupportedDataViewMapping) {
-        Debugger.LOG('Instantiating [DataViewService]...');
+        Debugger.LOG(`Instantiating [${owner}]`);
         this.dataViewMappingType = dataViewMappingType;
     }
 
+    @standardLog({ profile: true, owner })
     validateDataView(dataViews: DataView[], dataRoles: string[] = []) {
         Debugger.LOG('Testing data view validity...');
         this.hasValidDataViewMapping = this.validateTableDataViewMapping(
@@ -80,6 +83,7 @@ export class DataViewService {
      *
      * @param dataViews - Visual dataView from update
      */
+    @standardLog({ profile: true, owner })
     private validateTableDataViewMapping(dataViews?: DataView[]) {
         Debugger.LOG(
             'Testing [table] data view mapping has basic requirements...'
@@ -100,6 +104,7 @@ export class DataViewService {
      * @param columns   - Array of metadata columns from the Power BI data view.
      * @param role      - Name of data role to search for.
      */
+    @standardLog()
     private getDataRoleIndex(columns: DataViewMetadataColumn[], role: string) {
         Debugger.LOG(`Searching dataView columns for role: ${role}...`);
         const result = columns.findIndex((c) => c.roles[`${role}`]);
@@ -112,6 +117,7 @@ export class DataViewService {
      *
      * @param table     - Table data from visual data view
      */
+    @standardLog({ profile: true, owner })
     getMappedDataset(table: DataViewTable): IVisualDataset {
         Debugger.LOG('Mapping data view into visual dataset...');
         Debugger.LOG('Initialising empty dataset...');
@@ -157,6 +163,7 @@ export class DataViewService {
         }
     }
 
+    @standardLog()
     getEmptyDataset(): IVisualDataset {
         Debugger.LOG('Getting new empty dataset...');
         return {

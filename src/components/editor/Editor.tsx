@@ -83,10 +83,13 @@ export class Editor extends React.Component<EditorProps, EditorState> {
 
     componentDidMount() {
         Debugger.LOG(`Mounted Component: [VisualEditor]`);
-        this.props.visualApi.editor.new(this.container, this.state.options);
+        this.props.visualServices.editor.new(
+            this.container,
+            this.state.options
+        );
         Debugger.LOG('Setting spec from properties...');
-        this.props.visualApi.editor.setText(
-            this.props.visualApi.settings.vega.jsonSpec
+        this.props.visualServices.editor.setText(
+            this.props.visualServices.settings.vega.jsonSpec
         );
         this.setAceEditorBehaviour();
     }
@@ -99,10 +102,11 @@ export class Editor extends React.Component<EditorProps, EditorState> {
     private handleText() {
         Debugger.LOG('Editor.handleText()');
         Debugger.LOG('Handling text entry...');
-        const { resolveDirtyFlag, visualApi } = this.props,
-            { autoSave } = visualApi.settings.vega;
+        const { resolveDirtyFlag, visualServices } = this.props,
+            { editor, property, specification} = visualServices,
+            { autoSave } = visualServices.settings.vega;
         if (autoSave) {
-            visualApi.persistSpec();
+            specification.persist(property, editor);
         } else {
             Debugger.LOG('Auto-apply disabled - state resolution required...');
             resolveDirtyFlag();
@@ -112,16 +116,18 @@ export class Editor extends React.Component<EditorProps, EditorState> {
     private setAceEditorBehaviour() {
         Debugger.FOOTER();
         Debugger.LOG('Setting editor behaviour...');
-        const { visualApi } = this.props;
-        visualApi.editor.setAceEditorOptions({
+        const { visualServices } = this.props;
+        visualServices.editor.setAceEditorOptions({
             useWorker: false,
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true
         });
-        visualApi.editor.setProvider(visualApi.settings.vega.provider);
-        visualApi.editor.updateCompleters(
-            visualApi.dataset.metadata,
-            visualApi.localisationManager
+        visualServices.editor.setProvider(
+            visualServices.settings.vega.provider
+        );
+        visualServices.editor.updateCompleters(
+            visualServices.dataset.metadata,
+            visualServices.localisationManager
         );
         Debugger.LOG('Finished setting behaviour!');
     }

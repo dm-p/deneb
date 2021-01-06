@@ -27,12 +27,6 @@
 import { visual } from '../../pbiviz.json';
 import { MainInterfaceState } from '../components';
 import {
-    dataLimitSettingsDefaults,
-    IDataLimitSettingsDefaults
-} from './dataLimit';
-import { features, IVisualFeatures } from './features';
-import { splitPane, ISplitPaneConfig } from './splitPane';
-import {
     specTemplate,
     vegaLiteTopLevelSpecSettingsDefaults,
     vegaSettingsDefaults,
@@ -43,16 +37,32 @@ import {
 
 export {
     VisualConfiguration,
-    ISplitPaneConfig,
+    VisualFeatures,
     IVisualConfiguration,
     ISpecTemplate
 };
 
+const VisualFeatures = {
+    developerMode: true,
+    fetchMoreData: true
+};
+
+const splitPaneDefaults = {
+        minSize: 300,
+        maxSizePercent: 0.6,
+        defaultSizePercent: 0.4,
+        collapsedSize: 36
+    },
+    dataLimitDefaults = {
+        enabled: VisualFeatures.fetchMoreData,
+        override: false,
+        showCustomVisualNotes: true
+    };
+
 const VisualConfiguration: IVisualConfiguration = {
     metadata: visual,
-    features: features,
     settingsDefaults: {
-        dataLimit: dataLimitSettingsDefaults,
+        dataLimit: dataLimitDefaults,
         vega: vegaSettingsDefaults,
         vegaLiteTopLevelConfig: vegaLiteTopLevelSpecSettingsDefaults
     },
@@ -61,16 +71,15 @@ const VisualConfiguration: IVisualConfiguration = {
             isEditMode: false
         }
     },
-    splitPane: splitPane,
+    splitPane: splitPaneDefaults,
     specTemplate: specTemplate
 };
 
 interface IVisualConfiguration {
     metadata: IVisualMetadata;
-    features: IVisualFeatures;
     settingsDefaults: ISettingsDefaults;
     stateDefaults: IStateDefaults;
-    splitPane: ISplitPaneConfig;
+    splitPane: { [key: string]: any };
     specTemplate: ISpecTemplate;
 }
 
@@ -86,7 +95,7 @@ interface IVisualMetadata {
 }
 
 interface ISettingsDefaults {
-    dataLimit: IDataLimitSettingsDefaults;
+    dataLimit: { [key: string]: any };
     vega: IVegaSettingsDefaults;
     vegaLiteTopLevelConfig: IVegaLiteTopLevelConfigSettingsDefaults;
 }

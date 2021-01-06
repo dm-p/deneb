@@ -37,7 +37,7 @@ import {
     VisualRender,
     LandingPage
 } from '..';
-import { VisualState } from '../../api';
+import { VisualState } from '../../services';
 
 export class MainInterface extends React.Component<
     MainInterfaceProps,
@@ -50,16 +50,16 @@ export class MainInterface extends React.Component<
 
     render() {
         Debugger.LOG('Rendering component: [VisualInterface]');
-        const { visualApi } = this.props,
+        const { visualServices } = this.props,
             { isEditMode } = this.state;
         Debugger.LOG('Determining display conditions...');
         switch (true) {
-            case visualApi.state === VisualState.Initial:
-            case visualApi.state === VisualState.Landing: {
+            case visualServices.state === VisualState.Initial:
+            case visualServices.state === VisualState.Landing: {
                 Debugger.LOG('Landing page will be displayed.');
                 return (
                     <>
-                        <LandingPage visualApi={visualApi} />
+                        <LandingPage visualServices={visualServices} />
                     </>
                 );
             }
@@ -67,7 +67,7 @@ export class MainInterface extends React.Component<
                 Debugger.LOG('Advanced Editor will be displayed.');
                 return (
                     <>
-                        <EditorPane visualApi={visualApi} />
+                        <EditorPane visualServices={visualServices} />
                     </>
                 );
             }
@@ -75,7 +75,7 @@ export class MainInterface extends React.Component<
                 Debugger.LOG('Standard visual display.');
                 return (
                     <>
-                        <VisualRender visualApi={visualApi} />
+                        <VisualRender visualServices={visualServices} />
                     </>
                 );
             }

@@ -28,12 +28,12 @@
 import * as React from 'react';
 import { createClassFromSpec, VegaLite } from 'react-vega';
 import * as vega from 'vega';
-import { TooltipHandlerService } from '../../api/services/TooltipHandlerService';
+import { TooltipHandlerService } from '../../services/TooltipHandlerService';
 
 // Internal dependencies
 import { Debugger } from '../../Debugger';
 import { VisualRenderProps, SpecificationError, DataFetching } from '..';
-import { VisualState } from '../../api';
+import { VisualState } from '../../services';
 
 export class VisualRender extends React.Component<VisualRenderProps, {}> {
     render() {
@@ -42,22 +42,22 @@ export class VisualRender extends React.Component<VisualRenderProps, {}> {
     }
 
     shouldComponentUpdate(nextProps: VisualRenderProps) {
-        Debugger.LOG('VisualRender.shouldComponentUpdate()');
-        const { visualApi } = this.props,
-            shouldRender = visualApi.rendering.requestRender();
+        // Debugger.LOG('VisualRender.shouldComponentUpdate()');
+        const { visualServices } = this.props,
+            shouldRender = visualServices.rendering.requestRender();
         Debugger.LOG(`shouldUpdate = ${shouldRender}`);
         return shouldRender;
     }
 
     private resolveRenderState() {
-        const { visualApi } = this.props,
-            { rowsLoaded } = visualApi.dataLimit;
+        const { visualServices } = this.props,
+            { rowsLoaded } = visualServices.dataLimit;
 
         Debugger.LOG('Determining visual render state...');
-        switch (visualApi.state) {
+        switch (visualServices.state) {
             case VisualState.Fetching: {
                 Debugger.LOG(`Updating fetch message to ${rowsLoaded} rows.`);
-                return <DataFetching visualApi={visualApi} />;
+                return <DataFetching visualServices={visualServices} />;
             }
             case VisualState.Processing: {
                 return <div>All rows loaded. Processing query result...</div>;
@@ -80,18 +80,20 @@ export class VisualRender extends React.Component<VisualRenderProps, {}> {
      */
     private resolveVegaVisualComponent(): JSX.Element {
         Debugger.LOG('Resolving Vega/Vega-Lite component...');
-        const { visualApi } = this.props,
-            { vega: grammar } = visualApi.settings,
-            { height } = visualApi.viewport,
-            width = visualApi.getVisualWidth(),
-            spec = visualApi.spec,
-            data = { values: visualApi.dataset.values },
-            config = visualApi.getStaticConfig();
+        const { visualServices } = this.props,
+            { vega: grammar } = visualServices.settings,
+            { height } = visualServices.viewport,
+            width = visualServices.getVisualWidth(),
+            spec = visualServices.specification.spec,
+            data = { values: visualServices.dataset.values },
+            config = visualServices.specification.getInitialConfig(
+                visualServices.settings
+            );
         if (!spec.isValid) {
             return (
                 <>
                     <SpecificationError
-                        visualApi={visualApi}
+                        visualServices={visualServices}
                         error={spec.error}
                     />
                 </>
@@ -108,7 +110,7 @@ export class VisualRender extends React.Component<VisualRenderProps, {}> {
                         actions={false} // This creates blurring on some displays if enabled
                         width={width - 10}
                         height={height - 10}
-                        tooltip={new TooltipHandlerService(visualApi).call}
+                        tooltip={new TooltipHandlerService(visualServices).call}
                         config={config}
                     />
                 );
@@ -125,7 +127,7 @@ export class VisualRender extends React.Component<VisualRenderProps, {}> {
                         actions={false} // This creates blurring on some displays if enabled
                         width={width - 10}
                         height={height - 10}
-                        tooltip={new TooltipHandlerService(visualApi).call}
+                        tooltip={new TooltipHandlerService(visualServices).call}
                         config={config}
                     />
                 );

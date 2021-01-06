@@ -45,10 +45,12 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
 // Internal dependencies
-import { Debugger } from './Debugger';
+import { standardLog, Debugger } from './Debugger';
 import { MainInterface } from './components';
-import { VisualApi } from './api';
+import { VisualService } from './services';
 import VisualSettings from './properties/VisualSettings';
+
+const owner = 'Visual';
 
 export class Visual implements IVisual {
     private settings: VisualSettings;
@@ -63,7 +65,7 @@ export class Visual implements IVisual {
     // Handle localisation of visual text
     private localisationManager: ILocalizationManager;
     // Visual API
-    private visualApi: VisualApi;
+    private visualApi: VisualService;
 
     constructor(options: VisualConstructorOptions) {
         try {
@@ -78,10 +80,13 @@ export class Visual implements IVisual {
             Debugger.LOG('Getting events service...');
             this.events = this.host.eventService;
             Debugger.LOG('Initialising Visual API...');
-            this.visualApi = new VisualApi(this.host, this.localisationManager);
+            this.visualApi = new VisualService(
+                this.host,
+                this.localisationManager
+            );
             Debugger.LOG('Creating main React component...');
             this.reactRoot = React.createElement(MainInterface, {
-                visualApi: this.visualApi
+                visualServices: this.visualApi
             });
             ReactDOM.render(this.reactRoot, this.container);
         } catch (e) {
@@ -89,8 +94,9 @@ export class Visual implements IVisual {
         }
     }
 
+    @standardLog({ separator: true, profile: true, report: true, owner })
     public update(options: VisualUpdateOptions) {
-        Debugger.HEADING('Visual Update');
+        // DebuggerV1.HEADING('Visual Update');
         Debugger.LOG('Options', options);
 
         // Handle main update flow
@@ -107,19 +113,15 @@ export class Visual implements IVisual {
             Debugger.LOG('Parsed settings', this.settings);
 
             // Update the visual API with latest data
-            Debugger.FOOTER();
             this.visualApi.resolveUpdateOptions(options);
-            Debugger.FOOTER();
 
             // Signal that we've finished rendering
             Debugger.LOG('Visual updated successfully!');
-            Debugger.FOOTER();
             this.events.renderingFinished(options);
             return;
         } catch (e) {
             // Signal that we've encountered an error
             Debugger.LOG('Error during update!', e);
-            Debugger.FOOTER();
             this.events.renderingFailed(options, e);
         } finally {
             Debugger.LOG('API', this.visualApi);

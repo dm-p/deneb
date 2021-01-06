@@ -31,7 +31,7 @@ import { RenderErrorProps } from '..';
 export class SpecificationError extends React.Component<RenderErrorProps, {}> {
     render() {
         Debugger.LOG('Rendering Component: [SpecificationError]...');
-        const { visualApi, error } = this.props;
+        const { visualServices, error } = this.props;
 
         return (
             <>
@@ -40,7 +40,7 @@ export class SpecificationError extends React.Component<RenderErrorProps, {}> {
                         <div className='w3-cell-row top'>
                             <div className='w3-cell'>
                                 <h3>
-                                    {visualApi.localisationManager.getDisplayName(
+                                    {visualServices.localisationManager.getDisplayName(
                                         'Spec_Error_Heading'
                                     )}
                                 </h3>
@@ -49,7 +49,7 @@ export class SpecificationError extends React.Component<RenderErrorProps, {}> {
                         </div>
                         <div className='w3-cell-row section'>
                             <div className='text-muted assistive'>
-                                {visualApi.localisationManager.getDisplayName(
+                                {visualServices.localisationManager.getDisplayName(
                                     'Spec_Error_Overview'
                                 )}
                             </div>

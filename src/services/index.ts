@@ -29,17 +29,21 @@ import powerbi from 'powerbi-visuals-api';
 import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
 
 // Internal dependencies
-import VisualApi from './VisualApi';
-import { DataLimitService } from './services/DataLimitService';
-import { DataViewService } from './services/DataViewService';
-import { EditorService } from './services/EditorService';
-import { VisualRenderingService } from './services/VisualRenderingService';
+import { VisualService } from './VisualService';
+import { DataLimitService } from './DataLimitService';
+import { DataViewService } from './DataViewService';
+import { EditorService } from './EditorService';
+import { PropertyService } from './PropertyService';
+import { SpecificationService } from './SpecificationService';
+import { VisualRenderingService } from './VisualRenderingService';
 
 export {
     DataLimitService,
     DataViewService,
     EditorService,
-    VisualApi,
+    PropertyService,
+    SpecificationService,
+    VisualService,
     VisualRenderingService,
     SupportedDataViewMapping,
     VisualState,
@@ -89,6 +93,7 @@ interface IVisualValueRow {
 interface ICompiledSpec {
     isValid: boolean;
     spec: object;
+    rawSpec: string;
     error?: string;
 }
 

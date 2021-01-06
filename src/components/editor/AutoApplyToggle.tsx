@@ -41,29 +41,11 @@ export class AutoApplyToggle extends React.Component<
         this.handleChange = this.handleChange.bind(this);
     }
 
-    private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-        Debugger.LOG('AutoAplyToggle.handleChange()');
-        Debugger.LOG('Handling auto apply toggle state...');
-        const checked = event.currentTarget.checked;
-        const { visualApi } = this.props,
-            { editor } = visualApi,
-            replace = visualApi.getObjectPropertyForValue(
-                'vega',
-                'autoSave',
-                checked
-            );
-        this.setState({ checked: checked }, () => {
-            visualApi.updateObjectProperties(replace.properties);
-            this.props.handleApplyClick(event);
-            editor.focus();
-        });
-    }
-
     render() {
         Debugger.LOG('Rendering Component: [AutoApplyToggle]...');
         const ctlName = 'autoApply',
-            { visualApi } = this.props,
-            { localisationManager } = visualApi,
+            { visualServices } = this.props,
+            { localisationManager } = visualServices,
             { checked } = this.state;
         return (
             <>
@@ -93,5 +75,28 @@ export class AutoApplyToggle extends React.Component<
                 </div>
             </>
         );
+    }
+
+    /**
+     * Handle toggle change event and manage state accordingly
+     *
+     * @param event - React event details
+     */
+    private handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+        Debugger.LOG('AutoApplyToggle.handleChange()');
+        Debugger.LOG('Handling auto apply toggle state...');
+        const checked = event.currentTarget.checked;
+        const { visualServices } = this.props,
+            { editor } = visualServices,
+            replace = visualServices.property.getObjectPropertyForValue(
+                'vega',
+                'autoSave',
+                checked
+            );
+        this.setState({ checked: checked }, () => {
+            visualServices.property.updateObjectProperties(replace.properties);
+            this.props.handleApplyClick(event);
+            editor.focus();
+        });
     }
 }

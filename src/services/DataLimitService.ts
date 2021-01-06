@@ -33,10 +33,11 @@ import DataViewMetadata = powerbi.DataViewMetadata;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 
 // Internal dependencies
-import { Debugger } from '../../Debugger';
-import { VisualConfiguration } from '../../config';
-import DataLimitSettings from '../../properties/DataLimitSettings';
-const enabled = VisualConfiguration.features.fetchMoreData;
+import { standardLog, Debugger } from '../Debugger';
+import { VisualFeatures } from '../config';
+import DataLimitSettings from '../properties/DataLimitSettings';
+const enabled = VisualFeatures.fetchMoreData,
+    owner = 'DataLimitService';
 
 /**
  * Handles all logic around fetching more data from the data model, if needed.
@@ -50,19 +51,19 @@ export class DataLimitService {
     private host: IVisualHost;
 
     constructor(host: IVisualHost) {
-        Debugger.LOG('Data limit handler constructor instantiating...');
+        Debugger.LOG(`Instantiating [${owner}]`);
         this.host = host;
-        Debugger.LOG('Data limit handler instantiated!');
+        Debugger.LOG(`[${owner}] instantiated!`);
     }
 
     /**
      * Look at the data limit settings and data view, and carry out additional loading of data if required.
      */
+    @standardLog({ separator: true, profile: true, owner })
     public handleDataFetch(
         options: VisualUpdateOptions,
         settings: DataLimitSettings
     ) {
-        Debugger.FOOTER();
         Debugger.LOG('Data Limit Check/Fetch');
 
         if (this.featureIsEnabled) {
@@ -98,12 +99,12 @@ export class DataLimitService {
         } else {
             Debugger.LOG('Skipping fetch of additional data.');
         }
-        Debugger.FOOTER();
     }
 
     /**
      * Checks for valid dataview and provides count of values.
      */
+    @standardLog()
     private getRowCount(dataView: DataView): number {
         Debugger.LOG('Counting data view rows...');
         return dataView?.table?.rows?.length || 0;
@@ -112,6 +113,7 @@ export class DataLimitService {
     /**
      * Confirms whether we should attempt to do the additional fetch or not, based on config and the data view metadata.
      */
+    @standardLog()
     private shouldFetchMore(
         metadata: DataViewMetadata,
         settings: DataLimitSettings
@@ -120,7 +122,12 @@ export class DataLimitService {
         return metadata.segment && settings.override && this.canFetchMore;
     }
 
+    /**
+     * Resets the window counters, when a brand new load is invoked
+     */
+    @standardLog()
     private resetCounters() {
+        Debugger.LOG('Resetting loading counters...');
         this.windowsLoaded = 1;
         this.rowsLoaded = 0;
     }

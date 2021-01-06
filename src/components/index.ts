@@ -33,11 +33,11 @@ import { VisualRender } from './render/VisualRender';
 import { SpecificationError } from './render/SpecificationError';
 import { DataFetching } from './render/DataFetching';
 import { AutoApplyToggle } from './editor/AutoApplyToggle';
-import { VisualApi } from '../api';
+import { VisualService } from '../services';
 import { JSONEditorOptions } from 'jsoneditor';
 
 export {
-    VisualApi,
+    VisualService,
     MainInterface,
     LandingPage,
     EditorPane,
@@ -63,8 +63,8 @@ export {
 };
 
 interface UiBaseProps {
-    // Visual API
-    visualApi: VisualApi;
+    // Visual services, for managing shared state and operations
+    visualServices: VisualService;
 }
 
 /**

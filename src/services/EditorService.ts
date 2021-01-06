@@ -31,11 +31,13 @@ import Ace = ace.Ace;
 import Editor = Ace.Editor;
 import Completer = Ace.Completer;
 import JSONEditor, { JSONEditorOptions } from 'jsoneditor';
-import { Debugger } from '../../Debugger';
+import { Debugger, standardLog } from '../Debugger';
 import * as vegaSchema from 'vega/build/vega-schema.json';
 import * as vegaLiteSchema from 'vega-lite/build/vega-lite-schema.json';
-import { VegaProvider } from '../../properties';
-import { ITableColumnMetadata, IVisualValueMetadata } from '..';
+import { VegaProvider } from '../properties';
+import { ITableColumnMetadata, IVisualValueMetadata } from '.';
+
+const owner = 'EditorService';
 
 export class EditorService {
     // jsoneditor instance
@@ -44,69 +46,83 @@ export class EditorService {
     isDirty: boolean = false;
 
     constructor() {
-        Debugger.LOG('Instantiating [EditorService]...');
+        Debugger.LOG(`Instantiating [${owner}]`);
     }
 
+    @standardLog()
     new(element: HTMLDivElement, options: JSONEditorOptions) {
-        Debugger.LOG('EditorService.new()');
+        Debugger.LOG('Creating new JSON editor...');
         this.jsonEditor = new JSONEditor(element, options);
     }
 
+    @standardLog()
     focus() {
+        Debugger.LOG('Setting focus to JSON editor...');
         this.jsonEditor.focus();
     }
 
+    @standardLog()
     getText() {
-        Debugger.LOG('EditorService.getText()');
+        Debugger.LOG('Getting JSON editor text...');
         return this.jsonEditor.getText();
     }
 
+    @standardLog()
     setText(text: string) {
-        Debugger.LOG('EditorService.setText()');
+        Debugger.LOG('Setting JSON editor text...');
         this.jsonEditor.setText(text);
     }
 
+    @standardLog()
     resize() {
-        Debugger.LOG('EditorService.resize()');
+        Debugger.LOG('Handling resize of JSON editor...');
         this.getAceEditorInstance().resize(true);
     }
 
+    @standardLog()
     resolveDirtyStatus(text?: string) {
-        Debugger.LOG('EditorService.resolveDirtyStatus()');
+        Debugger.LOG('Resolving editor dirty status...');
         this.isDirty = this.getText() !== (text || this.getText());
     }
 
+    @standardLog()
     setProvider(provider: VegaProvider) {
+        Debugger.LOG('Setting provider schema for JSON editor...');
         switch (provider) {
             case 'vegaLite': {
                 this.jsonEditor.setSchema(vegaLiteSchema);
+                Debugger.LOG('Provider = Vega-Lite');
                 break;
             }
             case 'vega': {
                 this.jsonEditor.setSchema(vegaSchema);
+                Debugger.LOG('Provider = Vega');
                 break;
             }
             default: {
                 this.jsonEditor.setSchema(null);
+                Debugger.LOG('Provider = [none]');
             }
         }
     }
 
+    @standardLog()
     setAceEditorOptions(optList: { [key: string]: any }) {
-        Debugger.LOG('EditorService.setAceEditorOptions()');
+        Debugger.LOG('Setting JSON editor options for Ace...');
         this.getAceEditorInstance().setOptions(optList);
     }
 
+    @standardLog()
     private getAceEditorInstance(): Editor {
-        Debugger.LOG('EditorService.getAceEditorInstance()');
+        Debugger.LOG('Getting Ace editor instance from JSON editor...');
         return (<any>this.jsonEditor)?.aceEditor;
     }
 
+    @standardLog()
     updateCompleters(
         metadata: IVisualValueMetadata,
         localisationManager: ILocalizationManager
     ) {
-        Debugger.LOG('EditorService.updateCompleters()');
         Debugger.LOG(`Updating editor completers...`);
         let instance = this.getAceEditorInstance();
         if (!instance) {
@@ -127,11 +143,11 @@ export class EditorService {
     /**
      * For an editor, we need to populate the completers for the end-user.
      */
+    @standardLog()
     private getCompleters(
         metadata: IVisualValueMetadata,
         localisationManager: ILocalizationManager
     ): Completer {
-        Debugger.LOG('EditorService.getCompleters()');
         Debugger.LOG('Getting completers for editor...');
         let tokens = [];
         // Tokens for columns and measures

@@ -31,17 +31,10 @@ import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import DataViewObjects = powerbi.DataViewObjects;
 import VisualObjectInstancesToPersist = powerbi.VisualObjectInstancesToPersist;
 import IViewport = powerbi.IViewport;
-import IColorInfo = powerbi.IColorInfo;
 import VisualUpdateType = powerbi.VisualUpdateType;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import VisualDataChangeOperationKind = powerbi.VisualDataChangeOperationKind;
 import ViewMode = powerbi.ViewMode;
-
-// External dependencies
-import * as Vega from 'vega';
-import Spec = Vega.Spec;
-import * as VegaLite from 'vega-lite';
-import { TopLevelSpec } from 'vega-lite';
 
 // Internal dependencies
 import VisualSettings from '../properties/VisualSettings';
@@ -51,17 +44,19 @@ import {
     EditorService,
     VisualRenderingService,
     IVisualDataset,
-    ICompiledSpec,
-    VisualState
+    VisualState,
+    SpecificationService,
+    PropertyService
 } from '.';
-import { Debugger } from '../Debugger';
-import { VisualConfiguration } from '../config';
+import { Debugger, standardLog } from '../Debugger';
 import { MainInterface } from '../components';
+
+const owner = 'VisualServices';
 
 /**
  *
  */
-export default class VisualApi {
+export class VisualService {
     // Visual host services
     host: IVisualHost;
     // Handle localisation of visual text
@@ -72,6 +67,10 @@ export default class VisualApi {
     editor: EditorService;
     // Visual rendering services
     rendering: VisualRenderingService;
+    // Specification services
+    specification: SpecificationService;
+    // Property services
+    property: PropertyService;
     // Indication of visual state for various operations, that the UI can use
     state: VisualState = VisualState.Initial;
     // Current locale
@@ -84,19 +83,18 @@ export default class VisualApi {
     viewport: IViewport;
     // Editor pane width - used to offset width of visual
     editorPaneWidth: number;
-    // visual spec
-    spec: ICompiledSpec;
     // Data Limit Services
     dataLimit: DataLimitService;
-    // Object metadata
-    private objects: DataViewObjects;
 
     constructor(host: IVisualHost, localisationManager: ILocalizationManager) {
+        Debugger.LOG(`Instantiating [${owner}]`);
         this.host = host;
         this.dataView = new DataViewService('table');
         this.dataLimit = new DataLimitService(host);
         this.editor = new EditorService();
+        this.specification = new SpecificationService();
         this.rendering = new VisualRenderingService();
+        this.property = new PropertyService(host, this.rendering);
         this.locale = host?.locale;
         this.localisationManager = localisationManager;
         this.settings = <VisualSettings>VisualSettings.getDefault();
@@ -106,102 +104,12 @@ export default class VisualApi {
         Debugger.LOG('Visual API initialisation complete!');
     }
 
-    /**
-     * Handles resolution of grammar content based on whether the user is updating or resetting it
-     *
-     * @param value         - optional value of content. If not supplied, then we know to retrieve the default
-     *                          value for that property from the visual settings
-     */
-    getObjectPropertyForValue(
-        objectName: string,
-        propertyName: string,
-        value?: powerbi.DataViewPropertyValue
-    ) {
-        Debugger.LOG('VisualApi.getObjectPropertyForValue()');
-        Debugger.LOG(`Resolving content for ${objectName}.${propertyName}...`);
-        Debugger.LOG(`Supplied value: ${value}`);
-        try {
-            const changes = this.getNewObjectInstance(objectName),
-                defaultValue = <string>(
-                    VisualSettings.getDefault()[objectName][propertyName]
-                );
-            changes.replace[0].properties[propertyName] = value ?? defaultValue;
-            Debugger.LOG('Resolved object properties', changes);
-            return {
-                properties: changes,
-                defaultValue: defaultValue
-            };
-        } catch (e) {
-            Debugger.ERROR(e);
-        }
-    }
-
-    /**
-     * Gets an empty metadata object so that we can populate it with a value from the text box, or reset it.
-     */
-    private getNewObjectInstance(
-        objectName: string
-    ): VisualObjectInstancesToPersist {
-        Debugger.LOG('VisualApi.getNewObjectInstance()');
-        Debugger.LOG('Getting new object instance for persistence...');
-        return {
-            replace: [
-                {
-                    objectName: objectName,
-                    selector: null,
-                    properties: this.objects[objectName] || {}
-                }
-            ]
-        };
-    }
-
-    getStaticConfig() {
-        const category: string[] = this.host.colorPalette['colors'].map(
-            (c: IColorInfo) => c.value
-        );
-        const { vegaLiteTopLevelConfig } = this.settings;
-        return {
-            background: vegaLiteTopLevelConfig.background,
-            font: vegaLiteTopLevelConfig.font,
-            padding: vegaLiteTopLevelConfig.padding,
-            range: {
-                category: {
-                    scheme: category
-                }
-            }
-        };
-    }
-
-    persistSpec() {
-        Debugger.LOG('VisualApi.persistSpec()');
-        const replace = this.getObjectPropertyForValue(
-            'vega',
-            'jsonSpec',
-            this.editor.getText()
-        );
-        Debugger.LOG('Updating component state and persisting properties...');
-        this.updateObjectProperties(replace.properties);
-        this.editor.resolveDirtyStatus();
-        this.editor.focus();
-    }
-
     getVisualWidth() {
         return this.viewport.width - this.editorPaneWidth;
     }
 
-    /**
-     * Manage persistence of content to the visual's dataView objects
-     *
-     * @param changes   - changes to apply to the dataView
-     */
-    updateObjectProperties(changes: VisualObjectInstancesToPersist) {
-        Debugger.LOG('Persisting changes to dataView...', changes);
-        this.rendering.registerPersistEvent();
-        this.host.persistProperties(changes);
-    }
-
+    @standardLog({ profile: true, separator: true, owner })
     resolveUpdateOptions(options: VisualUpdateOptions) {
-        Debugger.LOG('VisualApi.resolveUpdateOptions()');
         Debugger.LOG('Resolving visual update options for API operations...');
         const dataView = this.dataView,
             isEditMode =
@@ -237,7 +145,8 @@ export default class VisualApi {
                 }
 
                 Debugger.LOG('Assigning objects...');
-                this.objects = options.dataViews[0].metadata?.objects || {}; // TODO: Maybe nicer resolution
+                this.property.objects =
+                    options.dataViews[0].metadata?.objects || {}; // TODO: Maybe nicer resolution
                 Debugger.LOG('Delegating additional data fetch...');
                 this.dataLimit.handleDataFetch(
                     options,
@@ -258,7 +167,8 @@ export default class VisualApi {
         }
 
         if (this.state === VisualState.Processed) {
-            this.parseSpec();
+            const { vega } = this.settings;
+            this.specification.parse(vega.jsonSpec, vega.provider);
         }
 
         MainInterface.UPDATE({ isEditMode: isEditMode });
@@ -269,57 +179,5 @@ export default class VisualApi {
         Debugger.LOG(`Setting visual state to ${state}`);
         this.state = state;
         this.rendering.registerStateChangeEvent(state);
-    }
-
-    getDefaultSpec() {
-        const grammar = this.settings.vega,
-            specTemplate = VisualConfiguration.specTemplate;
-        Debugger.LOG(`Resetting editor content for [${grammar.provider}]...`);
-        switch (grammar.provider) {
-            case 'vegaLite': {
-                return JSON.stringify(specTemplate.vegaLite, null, 4);
-            }
-            case 'vega': {
-                return JSON.stringify(specTemplate.vega, null, 4);
-            }
-            default: {
-                return '{}';
-            }
-        }
-    }
-
-    parseSpec() {
-        Debugger.LOG('VisualApi.parseSpec()');
-        Debugger.LOG('Attempting to parse JSON spec...');
-        const grammar = this.settings.vega,
-            spec = JSON.parse(grammar.jsonSpec);
-        try {
-            Debugger.LOG('Spec', JSON.stringify(spec));
-            switch (grammar.provider) {
-                case 'vegaLite': {
-                    Debugger.LOG('Attempting Vega-Lite...');
-                    VegaLite.compile(<TopLevelSpec>spec);
-                    Debugger.LOG('Vega-Lite spec parsed successfully :)');
-                    break;
-                }
-                case 'vega': {
-                    Debugger.LOG('Attempting Vega...');
-                    Vega.parse(<Spec>spec);
-                    Debugger.LOG('Vega spec parsed successfully :)');
-                    break;
-                }
-            }
-            this.spec = {
-                isValid: true,
-                spec: spec
-            };
-        } catch (e) {
-            Debugger.LOG(`[ERROR] Spec contains errors!`, e.message);
-            this.spec = {
-                isValid: false,
-                spec: spec,
-                error: e.message
-            };
-        }
     }
 }

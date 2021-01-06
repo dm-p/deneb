@@ -30,8 +30,10 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import { TooltipHandler } from 'vega-typings';
 import { View } from 'vega-typings';
 
-import { Debugger } from '../../Debugger';
-import { VisualApi } from '..';
+import { Debugger, standardLog } from '../Debugger';
+import { VisualService } from '.';
+
+const owner = 'TooltipHandlerService';
 
 /**
  * The tooltip handler class.
@@ -42,14 +44,15 @@ export class TooltipHandlerService {
      */
     public call: TooltipHandler;
 
-    private visualApi: VisualApi;
+    private visualApi: VisualService;
 
     /**
      * Create the tooltip handler and initialize the element and style.
      *
      * @param options Tooltip Options
      */
-    constructor(visualApi: VisualApi) {
+    constructor(visualApi: VisualService) {
+        Debugger.LOG(`Instantiating [${owner}]`);
         this.visualApi = visualApi;
         this.call = this.tooltipHandler.bind(this);
     }
@@ -57,6 +60,7 @@ export class TooltipHandlerService {
     /**
      * The tooltip handler function.
      */
+    @standardLog({ profile: true, separator: true, owner })
     private tooltipHandler(
         handler: any,
         event: MouseEvent,
@@ -100,9 +104,9 @@ export class TooltipHandlerService {
  * Create a tooltip handler and register it with the provided view.
  *
  * @param {View}        view      - The Vega view.
- * @param {VisualApi}   visualApi - Tooltip options.
+ * @param {VisualService}   visualApi - Tooltip options.
  */
-export default function (view: View, visualApi: VisualApi) {
+export default function (view: View, visualApi: VisualService) {
     const handler = new TooltipHandlerService(visualApi);
 
     view.tooltip(handler.call).run();

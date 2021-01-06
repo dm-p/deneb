@@ -25,15 +25,59 @@
  */
 
 // Internal dependencies
-import { VisualConfiguration } from './config';
-const features = VisualConfiguration.features;
+import { VisualFeatures } from './config';
+
+type MethodMarkerExtent = 'start' | 'end';
+
+interface ILogOptions {
+    owner?: string;
+    separator?: boolean;
+    profile?: boolean;
+    report?: boolean;
+}
+
+interface IProfileDetail {
+    owner: string;
+    methodName: string;
+    duration: number;
+}
+
+export function standardLog(options?: ILogOptions) {
+    return (
+        target: any,
+        propertyKey: string,
+        descriptor: PropertyDescriptor
+    ) => {
+        const targetMethod = descriptor.value;
+        descriptor.value = function (...args: any[]) {
+            const start = options?.profile && performance.now();
+            options?.separator && Debugger.FOOTER();
+            Debugger.METHOD_MARKER(propertyKey, 'start');
+            const result = targetMethod.apply(this, args),
+                finish = options?.profile && performance.now();
+            options?.profile &&
+                Debugger.ADD_PROFILING(
+                    propertyKey,
+                    options?.owner,
+                    start,
+                    finish
+                );
+            Debugger.METHOD_MARKER(propertyKey, 'end');
+            options?.report && Debugger.PROFILE_REPORT();
+            return result;
+        };
+        return descriptor;
+    };
+}
 
 /**
  * Used to handle debugging, if enabled within the visual settings
  */
 export class Debugger {
     // Indicates whether debugger is enabled (set by properties)
-    static enabled: boolean = features.developerMode;
+    private static enabled: boolean = VisualFeatures.developerMode;
+    // Profiling info
+    private static profiling: IProfileDetail[] = [];
 
     /**
      * Clears the console if debugging is enabled
@@ -41,6 +85,7 @@ export class Debugger {
     static CLEAR() {
         if (this.enabled) {
             console.clear();
+            this.profiling = [];
         }
     }
 
@@ -71,7 +116,50 @@ export class Debugger {
      */
     static LOG(...args: any[]) {
         if (this.enabled) {
-            console.log('|\t', ...args);
+            console.log('  -', ...args);
+        }
+    }
+
+    static METHOD_MARKER(
+        name: string,
+        extent: MethodMarkerExtent,
+        options?: ILogOptions
+    ) {
+        if (this.enabled) {
+            switch (extent) {
+                case 'start': {
+                    console.log(`<${name}>`);
+                    return;
+                }
+                case 'end': {
+                    console.log(`</${name}>`);
+                    return;
+                }
+            }
+        }
+    }
+
+    static ADD_PROFILING(
+        methodName: string,
+        owner: string,
+        start: number,
+        finish: number
+    ) {
+        if (this.enabled) {
+            this.profiling.push({
+                owner,
+                methodName,
+                duration: finish - start
+            });
+        }
+    }
+
+    static PROFILE_REPORT() {
+        if (this.enabled) {
+            this.HEADING('Profiling Report');
+            console.table(this.profiling);
+            this.FOOTER();
+            this.profiling = [];
         }
     }
 

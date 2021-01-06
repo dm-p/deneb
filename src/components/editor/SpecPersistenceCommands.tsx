@@ -40,9 +40,9 @@ export class SpecPersistenceCommands extends React.Component<SpecPersistenceComm
 
     render() {
         Debugger.LOG('Rendering Component: [VisualEditorCommand]...');
-        const { visualApi } = this.props,
-            { vega } = visualApi.settings,
-            { editor, localisationManager } = visualApi;
+        const { visualServices } = this.props,
+            { vega } = visualServices.settings,
+            { editor, localisationManager } = visualServices;
         Debugger.LOG(`Dirty=${editor.isDirty}`);
         return (
             <>
@@ -58,7 +58,7 @@ export class SpecPersistenceCommands extends React.Component<SpecPersistenceComm
                         {localisationManager.getDisplayName('Button_Reset')}
                     </button>
                     <AutoApplyToggle
-                        visualApi={visualApi}
+                        visualServices={visualServices}
                         persistChecked={vega.autoSave}
                         handleApplyClick={this.handleApplyClick}
                     />
@@ -69,8 +69,8 @@ export class SpecPersistenceCommands extends React.Component<SpecPersistenceComm
     }
 
     private resolveApplyStatus() {
-        const { visualApi } = this.props,
-            { localisationManager, editor } = visualApi;
+        const { visualServices } = this.props,
+            { localisationManager, editor } = visualServices;
         return (
             (editor.isDirty &&
                 localisationManager.getDisplayName('Apply_Unsynced')) ||
@@ -79,9 +79,8 @@ export class SpecPersistenceCommands extends React.Component<SpecPersistenceComm
     }
 
     private resolveApplyButton() {
-        const { visualApi } = this.props,
-            { vega } = visualApi.settings,
-            { localisationManager } = visualApi;
+        const { visualServices } = this.props,
+            { localisationManager } = visualServices;
         Debugger.LOG('Resolving Apply button...');
         return (
             <>
@@ -98,9 +97,9 @@ export class SpecPersistenceCommands extends React.Component<SpecPersistenceComm
     }
 
     private isApplyButtonDisabled() {
-        const { visualApi } = this.props,
-            { vega } = visualApi.settings,
-            { editor } = visualApi;
+        const { visualServices } = this.props,
+            { vega } = visualServices.settings,
+            { editor } = visualServices;
         return vega.autoSave || !editor.isDirty;
     }
 
@@ -127,11 +126,11 @@ export class SpecPersistenceCommands extends React.Component<SpecPersistenceComm
     private handleResetClick = (
         e: React.MouseEvent<HTMLButtonElement, MouseEvent>
     ) => {
-        const { visualApi } = this.props,
-            { editor } = visualApi,
-            grammar = visualApi.settings.vega,
-            defaultSpec = visualApi.getDefaultSpec(),
-            reset = visualApi.getObjectPropertyForValue(
+        const { visualServices } = this.props,
+            { editor, specification } = visualServices,
+            grammar = visualServices.settings.vega,
+            defaultSpec = specification.getDefaultSpec(grammar.provider),
+            reset = visualServices.property.getObjectPropertyForValue(
                 'vega',
                 'jsonSpec',
                 defaultSpec
@@ -141,12 +140,13 @@ export class SpecPersistenceCommands extends React.Component<SpecPersistenceComm
         editor.setText(defaultSpec);
         editor.focus();
         Debugger.LOG('Updating component state and persisting properties...');
-        visualApi.updateObjectProperties(reset.properties);
+        visualServices.property.updateObjectProperties(reset.properties);
     };
 
     private persistSpec() {
         Debugger.LOG('Persisting spec (from Apply button)...');
-        const { visualApi } = this.props;
-        visualApi.persistSpec();
+        const { visualServices } = this.props,
+        { editor, property, specification} = visualServices;
+        specification.persist(property, editor);
     }
 }

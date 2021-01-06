@@ -31,10 +31,9 @@ import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnume
 // Internal dependencies
 import SettingsBase from './SettingsBase';
 import { Debugger } from '../Debugger';
-import { VisualConfiguration } from '../config';
+import { VisualConfiguration, VisualFeatures } from '../config';
 
-const defaults = VisualConfiguration.settingsDefaults.vega,
-    features = VisualConfiguration.features;
+const defaults = VisualConfiguration.settingsDefaults.vega;
 
 /**
  * Manages the specification grammar and the user-provided source
@@ -63,7 +62,7 @@ export default class VegaSettings extends SettingsBase {
     ): VisualObjectInstanceEnumerationObject {
         Debugger.LOG('Processing enumeration...');
         enumerationObject.instances.map((i) => {
-            if (!features.developerMode) {
+            if (!VisualFeatures.developerMode) {
                 Debugger.LOG("Removing 'debug only' properties...");
                 // Remove spec JSON
                 Debugger.LOG('Raw spec removal...');
